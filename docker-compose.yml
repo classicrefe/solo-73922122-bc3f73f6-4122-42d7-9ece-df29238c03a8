@@ -1,0 +1,36 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: museum-passage-api:1.0.0
+    container_name: museum-passage-api
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+  demo:
+    image: museum-passage-api:1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: museum-passage-demo
+    command:
+      - python
+      - scripts/demo.py
+      - --base-url
+      - http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: "no"
